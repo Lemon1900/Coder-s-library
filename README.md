@@ -1,2 +1,2 @@
-# Library
-Library for coder
+# Library design pattern
+Library of design pattern
