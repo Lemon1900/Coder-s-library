@@ -1,0 +1,35 @@
+mysql数据库中CASE WHEN语句。
+case when语句，用于计算条件列表并返回多个可能结果表达式之一。
+CASE 具有两种格式：
+简单 CASE 函数将某个表达式与一组简单表达式进行比较以确定结果。
+CASE 搜索函数计算一组布尔表达式以确定结果。 
+两种格式都支持可选的 ELSE 参数。
+语法
+1.简单 CASE 函数:
+CASE input_expression
+    WHEN when_expression THEN result_expression
+        [ ...n ]
+    [ 
+        ELSE else_result_expression
+    END
+    
+
+2.CASE 搜索函数:
+CASE    
+WHEN Boolean_expression THEN result_expression
+        [ ...n ]
+    [ 
+        ELSE else_result_expression
+    END
+    
+
+
+当 input_expression = when_expression 取值为 TRUE，
+或者 Boolean_expression 取值为 TRUE 时返回的表达式result expression 
+
+在 SELECT 语句中，CASE 搜索函数允许根据比较值在结果集内对值进行替换
+
+
+可以在 WHERE中使用
+在group by 中使用，
+在order by 中使用
