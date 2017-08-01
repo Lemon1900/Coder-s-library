@@ -1,0 +1,67 @@
+触发器（trigger）：监视某种情况，并触发某种操作，它是提供给程序员和数据分析员来保证数据完整性的一种方法，它是与表事件相关的特殊的存储过程，它的执行不是由程序调用，也不是手工启动，而是由事件来触发，例如当对一个表进行操作（ insert，delete， update）时就会激活它执行。
+触发器经常用于加强数据的完整性约束和业务规则等。 触发器创建语法四要素：
+1.监视地点(table)
+2.监视事件(insert/update/delete) 
+3.触发时间(after/before) 
+4.触发事件(insert/update/delete)
+
+语法:
+DROP TRIGGER IF EXISTS `trigger_name`;
+create TRIGGER trigger_name trigger_time trigger_event on table1_name
+for each row
+trigger_stms(begin   end;)
+
+trigger_name:触发器名称
+trigger_time:触发时间
+trigger_event:要监听的事件
+table1_name:监听的表
+
+需注意对同一个表相同触发时间的相同触发事件，只能定义一个触发器；
+可以使用old和new来引用触发器中发生变化的记录内容
+
+
+eg:
+
+DROP TRIGGER IF EXISTS `insert_settlement_bysupplier`;  
+create TRIGGER insert_settlement_bysupplier  
+after insert on o_supplier for each row   
+begin  
+    insert into o_settlement ( NAME_CN, NAME_EN,RELATION_ID,TYPE,COMPANY_ID,REMOVE)  
+        values( new.NAME_CN, new.NAME_EN,new.ID,1,new.COMPANY_ID,0);  
+end;  
+
+
+
+DROP TRIGGER IF EXISTS `update_settlement_bysupplier`; 
+create TRIGGER update_settlement_bysupplier
+after update on o_supplier for each row
+begin  
+    update o_settlement set NAME_CN = new.NAME_CN, NAME_EN = new.NAME_EN, REMOVE = new.REMOVE  
+    where ID = new.ID;  
+end;
+
+
+
+DROP TRIGGER IF EXISTS `delete_settlement_bysupplier`; 
+create TRIGGER delete_settlement_bysupplier
+after delete on o_supplier for each row
+begin  
+    update o_settlement set REMOVE = 1 where ID = old.ID;  
+end;
+
+
+
+
+另外，检查自增
+SELECT AUTO_INCREMENT FROM information_schema.tables WHERE table_name="o_settlement";
+
+修改表自增值开始数字
+ALTER TABLE tableName auto_increment=number ;
+
+查询带序列：
+一：
+SET @i = 0;
+SELECT (@i:=@i+1) as row ,t_freight_fcl.id from t_freight_fcl;
+
+二：
+SELECT (@i:=@i+1) as row ,t_freight_fcl.id from t_freight_fcl,(SELECT @i := 0) r;
