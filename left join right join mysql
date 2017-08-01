@@ -1,0 +1,35 @@
+左连接，右连接，内连接，全连接，笛卡尔积
+
+
+一共有三种OUTER JOIN:outer left join, out right join, out full join
+关键字OUTER是可选择的，取决于具体语言，在实现上它们都是遵循标准的，因此FULL JOIN和FULL OUTER JOIN是一样的。
+
+
+left join是以左表的记录为基础的,
+左表的记录将会全部表示出来,而右表只会显示符合搜索条件的记录(join on 的条件). 
+B表记录不足的地方均为NULL. 
+左表会展示出符合条件的所有记录，并且不会重复，右表可能会重复。
+
+right join以右表为基础,左表不足的地方用NULL填充. 
+类似left join 右表不会重复出现
+
+
+如果想要取得所有的元素项，则可以使用FULL JOIN
+
+前表和后表缺失的数据项的值是NULL，都不会重复出现
+
+
+inner join(相等联接或内联接) 
+INNER JOIN跟JOIN是一样的，一般INNER关键字可以省略。INNER JOIN将只会返回相匹配的元素项，即不会返回结果为NULL的数据项
+SELECT * FROM  a INNER JOIN  b ON a.aID =b.bID 
+等同于
+SELECT * FROM a,b WHERE a.aID = b.bID
+
+inner join并不以谁为基础,它只显示符合条件的记录. 
+在表中存在至少一个匹配时，inner join 返回行。 关键字inner可省略
+
+如果在INNER JOIN操作中要联接包含Memo 数据类型或 OLE Object 数据类型数据的字段，将会发生错误？
+
+
+最后还有一个CROSS JOIN，笛卡儿积，将会返回A中每个元素分别匹配B中所有元素的结果，即N*M组合。
+cross join 也可以写成select a.*,b.* from table_a a,table_b b
