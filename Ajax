@@ -1,0 +1,331 @@
+AJAX是“Asynchronous JavaScript and XML”的缩写
+
+自从电脑出现以来，一直是桌面软件占据着绝对主导的地位，但是互联网的出现和成功使这一切开 始发生着微妙的变化。相当一部分的人都相信，迟早有一天，数据和电脑软件将会从桌面转移到互联网
+将来的电脑有可能抛弃笨重的硬盘，而直接从互 联网来获取数据和服务.这其中的主要问题就是互联网的连接不稳定，谁也不愿意看着自己的电脑从服务器一点一滴的下载数据，那么，ajax是不是解决了这个问题呢，
+说实话，与其说ajax解决了这个问题，倒不如它只是掩盖了这个问题.它只是在服务器和客户端之间充当了一个缓冲器，让用户误以为服务没有中断。精确的说，ajax并不能提高从服务器端下载数据的速度，
+而只是使这个等待不那么令人沮丧。但是正是这一点就足以产生巨大的影响和震动，它实际上也对桌面软件产生了巨大的冲击。
+
+编写应用程序时有两种基本的选择：桌面应用程序、Web 应用程序
+两者是类似的，桌面应用程序通常以 CD 为介质（有时候可从网站下载）并完全安装到您的计算机上。桌面应用程序可能使用互联网下载更新，但运行这些应用程序的代码在桌面计算机上。
+Web 应用程序运行在某处的 Web 服务器上，要通过 Web 浏览器访问这种应用程序。
+比这些应用程序的运行代码放在何处更重要的是，应用程序如何运转以及如何与其进行交互。桌面应用程序一般很快（就在您的计算机上运行，不用等待互联网连接），具有漂亮的用户界面（通常和操作系统有关）和非凡的动态性。
+可以单击、选择、输入、打开菜单和子菜单、到处巡游，基本上不需要等待。
+Ajax 尝试建立桌面应用程序的功能和交互性，与不断更新的 Web 应用程序之间的桥梁。可以使用像桌面应用程序中常见的动态用户界面和漂亮的控件，不过是在 Web 应用程序中。
+另一方面，Web 应用程序是最新的潮流，它们提供了在桌面上不能实现的服务（比如 Amazon.com 和 eBay）。但是，伴随着 Web 的强大而出现的是等待，等待服务器响应，等待屏幕刷新，等待请求返回和生成新的页面。
+在一般的 Web 应用程序中，用户填写表单字段并单击 Submit 按钮。然后整个表单发送到服务器，服务器将它转发给处理表单的脚本（通常是 PHP 或 Java，也可能是 CGI 进程或者类似的东西），
+脚本执行完成后再发送回全新的页面。该页面可能是带有已经填充某些数据的新表单的 HTML，也可能是确认页面，或者是具有根据原来表单中输入数据选择的某些选项的页面。
+当然，在服务器上的脚本或程序处理和返回新表单时用户必须等待。屏幕变成一片空白，等到服务器返回数据后再重新绘制。这就是交互性差的原因，用户得不到立即反馈，
+因此感觉不同于桌面应用程序。
+
+Ajax 基本上就是把 JavaScript 技术和 XMLHttpRequest 对象放在 Web 表单和服务器之间。当用户填写表单时，数据发送给一些 JavaScript 代码而不是直接发送给服务器。
+相反，JavaScript 代码捕获表单数据并向服务器发送请求。同时用户屏幕上的表单也不会闪烁、消失或延迟。换句话说，JavaScript 代码在幕后发送请求，用户甚至不知道请求的发出。
+更好的是，请求是异步发送的，就是说 JavaScript 代码（和用户）不用等待服务器的响应。因此用户可以继续输入数据、滚动屏幕和使用应用程序。
+
+然后，服务器将数据返回 JavaScript 代码（仍然在 Web 表单中），后者决定如何处理这些数据。它可以迅速更新表单数据，让人感觉应用程序是立即完成的，表单没有提交或刷新而用户得到了新数据。
+JavaScript 代码甚至可以对收到的数据执行某种计算，再发送另一个请求，完全不需要用户干预！这就是 XMLHttpRequest 的强大之处。它可以根据需要自行与服务器进行交互，
+用户甚至可以完全不知道幕后发生的一切。结果就是类似于桌面应用程序的动态、快速响应、高交互性的体验，但是背后又拥有互联网的全部强大力量。
+
+
+同步和异步:
+异步传输是面向字符的传输，它的单位是字符；
+同步传输是面向比特的传输，它的单位是桢，它传输的时候要求接受方和发送方的时钟是保持一致的。
+
+异步传输是将比特分成小组来进行传送。一般每个小组是一个8位字符，在每个小组的头部和尾部都有一个开始位和一个停止位，它在传送过程中接收方和发送方的时钟不要求一致，
+也就是说，发送方可以在任何时刻发送这些小组，而接收方并不知道它什么时候到达。
+
+一个典型的异步传输过程:计算机键盘和主机的通信，按下一个键的同时向主机发送一个8比特位的ASCII代 码，键盘可以在任何时刻发送代码，这取决于用户的输入速度，内部的硬件必须能够在任何时刻接收一个键入的字符
+异步传输存在 一个潜在的问题，即接收方并不知道数据会在什么时候到达。在它检测到数据并做出响应之前，第一个比特已经过去了
+每次异步传输的信息都以一个起始位开头，它通知接收方数据已经到达了，这就给了接收方响应、接收 和缓存数据比特的时间；在传输结束时，一个停止位表示该次传输信息的终止。按照惯例，空闲（没有传送数据）的线路实际携带着一个代表二进制1的信号。
+步传输的开始位使信号变成0，其他的比特位使信号随传输的数据信息而变化。最后，停止位使信号重新变回1，该信号一直保持到下一个开始位到达。例如在键盘上数字“1”，按照8比特位的扩展ASCII编码，
+将发送“00110001”，同时需要在8比特位的前面加一个起始位，后面一个停止位。
+
+同步传输的比特分组要大得多。它不是独立地发送每个字符，每个字符都有自己的开始位和停止位，而是把它们组合起来一起发送。我们将这些组合称为数据帧，或简称为帧
+数据帧的第一部分包含一组同步字符，它是一个独特的比特组合，类似于前面提到的起始位，用于通知接收方一个帧已经到达，但它同时还能确保接收方的采样速度和比特的到达速度保持一致，使收发双方进入同步
+帧的最后一部分是一个帧结束标记。与同步字符一样，它也是一个独特的比特串，类似于前面提到的停止位，用于表示在下一帧开始之前没有别的即将到达的数据
+
+同步传输通常要比异步传输快速得多。接收方不必对每个字符进行开始和停止的操作。一旦检测到帧同步字符，它就在接下来的数据到达时接收它们。另外，同步传输的开销也比较少
+
+Ajax包含下列技术： 
+基于web标准（standards-based presentation）XHTML+CSS的表示； 
+使用 DOM（Document Object Model）进行动态显示及交互； 
+使用 XML 和 XSLT 进行数据交换及相关操作； 
+使用 XMLHttpRequest 进行异步数据查询、检索； 
+使用 JavaScript 将所有的东西绑定在一起
+
+为什么要用ajax：Ajax应用程序的优势在于： 
+1. 通过异步模式，提升了用户体验 
+2. 优化了浏览器和服务器之间的传输，减少不必要的数据往返，减少了带宽占用 
+3. Ajax引擎在客户端运行，承担了一部分本来由服务器承担的工作，从而减少了大用户量下的服务器负载。
+
+1、最大的一点是页面无刷新，在页面内与服务器通信，给用户的体验非常好。
+2、使用异步方式与服务器通信，不需要打断用户的操作，具有更加迅速的响应能力。
+3、可以把以前一些服务器负担的工作转嫁到客户端，利用客户端闲置的能力来处理，减轻服务器和带宽的负担，节约空间和宽带租用成本。并且减轻服务器的负担，ajax的原则是“按需取数据”，可以最大程度的减少冗余请求，和响应对服务器造成的负担。
+4、基于标准化的并被广泛支持的技术，不需要下载插件或者小程序。
+
+ajax的缺点
+1、ajax干掉了back按钮，即对浏览器后退机制的破坏。后退按钮是一个标准的web站点的重要功能，但是它没法和js进行很好的合作
+2、安全问题:ajax技术就如同对企业数据建立了一个直接通道。这使得开发者在不经意间会暴露比以前更多的数据和服务器逻辑。ajax的逻辑可以对客户端的安全扫描技术隐藏起来，允许黑客从远端服务器上建立新的攻击
+3、对搜索引擎的支持比较弱。
+4、破坏了程序的异常机制。至少从目前看来，像ajax.dll，ajaxpro.dll这些ajax框架是会破坏程序的异常机制的。关于这个问题，我曾经在开发过程中遇到过，但是查了一下网上几乎没有相关的介绍。后来我自己做了一次试验，分别采用ajax和传统的form提交的模式来删除一条数据……给我们的调试带来了很大的困难。
+5、另外，像其他方面的一些问题，比如说违背了url和资源定位的初衷。例如，我给你一个url地址，如果采用了ajax技术，也许你在该url地址下面看到的和我在这个url地址下看到的内容是不同的。这个和资源定位的初衷是相背离的。
+6、一些手持设备（如手机、PDA等）现在还不能很好的支持ajax，比如说我们在手机的浏览器上打开采用ajax技术的网站时，它目前是不支持的，当然，这个问题和我们没太多关系。
+
+ajax的几种框架
+目前我们采用的比较多的ajax框架主要有ajax.dll,ajaxpro.dll,magicajax.dll 以及微软的atlas框架。
+Ajax.dll和Ajaxpro.dll这两个框架差别不大，而magicajax.dll只是封装得更厉害一些，比如说它可以直接返回DataSet数据集，
+ajax返回的都是字符串，magicajax只是对它进行了封装而已。但是它的这个特点可以给我们带来很大的方便，比如说我们的页面有一个列表，
+而列表的数据是不断变化的，那么我们可以采用magicajax来处理，操作很简单，添加magicajax之后，将要更新的列表控件放在magicajax的控件之内，
+然后在pageload里面定义更新间隔的时间就ok了，atlas的原理和magicajax差不多。但是，需要注意的一个问题是，这几种框架都只支持IE，
+没有进行浏览器兼容方面的处理，用反编译工具察看他们的代码就可以知道。
+除了这几种框架之外，我们平时用到的比较多的方式是自己创建xmlHttpRequest对象，这种方式和前面的几种框架相比更具有灵活性。
+
+
+Ajax的核心是JavaScript对象XmlHttpRequest。该对象在Internet Explorer 5中首次引入，它是一种支持异步请求的技术。
+简而言之，XmlHttpRequest使您可以使用JavaScript向服务器提出请求并处理响应，而不阻塞用户。
+通过XMLHttpRequest对象，Web开发人员可以在页面加载以后进行页面的局部更新。
+  
+AJAX技术体系的组成部分有哪些？ 
+HTML，css，dom，xml，xmlHttpRequest，javascript
+HTML 用于建立 Web 表单并确定应用程序其他部分使用的字段。 
+JavaScript 代码是运行 Ajax 应用程序的核心代码，帮助改进与服务器应用程序的通信。 
+DHTML 或 Dynamic HTML，用于动态更新表单。我们将使用 div、span 和其他动态 HTML 元素来标记 HTML。 
+文档对象模型 DOM 用于（通过 JavaScript 代码）处理 HTML 结构和（某些情况下）服务器返回的 XML。
+
+AJAX应用和传统WEB应用有什么不同？ 
+在传统的Javascript编程中，如果想得到服务器端数据库或文件上的信息，或者发送客户端信息到服务器，需要建立一个HTML form然后GET或者POST数据到服务器端。
+用户需要点击”Submit”按钮来发送或者接受数据信息，然后等待服务器响应请求，页面重新加载。 因为服务器每次都会返回一个新的页面， 
+所以传统的web应用有可能很慢而且用户交互不友好。 使用AJAX技术， 就可以使Javascript通过XMLHttpRequest对象直接与服务器进行交互。
+通过HTTP Request， 一个web页面可以发送一个请求到web服务器并且接受web服务器返回的信息(不用重新加载页面)，展示给用户的还是通一个页面，
+用户感觉页面刷新，也看不到到Javascript后台进行的发送请求和接受响应。
+
+Ajax请求总共有八种Callback 
+onSuccess onFailure onUninitialized onLoading onLoaded onInteractive onComplete onException
+
+在浏览器端如何得到服务器端响应的XML数据？
+XMLHttpRequest对象的responseXMl属性
+
+
+
+
+在 Microsoft 浏览器上创建 XMLHttpRequest 对象
+var xmlHttp = false;
+try {
+  xmlHttp = new ActiveXObject("Msxml2.XMLHTTP");
+} catch (e) {
+  try {
+    xmlHttp = new ActiveXObject("Microsoft.XMLHTTP");
+  } catch (e2) {
+    xmlHttp = false;
+  }
+}
+这两行代码基本上就是尝试使用一个版本的 MSXML 创建对象，如果失败则使用另一个版本创建该对象。不错吧？
+如果都不成功，则将 xmlHttp 变量设为 false，告诉您的代码出现了问题。如果出现这种情况，可能是因为安装了非 Microsoft 浏览器，需要使用不同的代码。
+
+如果选择的浏览器不是 Internet Explorer，或者为非 Microsoft 浏览器编写代码，就需要使用不同的代码。
+一行简单代码：
+var xmlHttp = new XMLHttpRequest object;
+
+这行简单得多的代码在 Mozilla、Firefox、Safari、Opera 以及基本上所有以任何形式或方式支持 Ajax 的非 Microsoft 浏览器中，创建了 XMLHttpRequest 对象。
+
+
+
+以支持多种浏览器的方式创建 XMLHttpRequest 对象
+
+/* Create a new XMLHttpRequest object to talk to the Web server */
+var xmlHttp = false;
+/*@cc_on @*/
+/*@if (@_jscript_version >= 5)
+try {
+  xmlHttp = new ActiveXObject("Msxml2.XMLHTTP");
+} catch (e) {
+  try {
+    xmlHttp = new ActiveXObject("Microsoft.XMLHTTP");
+  } catch (e2) {
+    xmlHttp = false;
+  }
+}
+@end @*/
+
+if (!xmlHttp &amp;& typeof XMLHttpRequest != 'undefined') {
+  xmlHttp = new XMLHttpRequest();
+}
+
+分为三步：
+1、建立一个变量 xmlHttp 来引用即将创建的 XMLHttpRequest 对象。 
+2、尝试在 Microsoft 浏览器中创建该对象： 
+  1）尝试使用 Msxml2.XMLHTTP 对象创建它。 
+  2）如果失败，再尝试 Microsoft.XMLHTTP 对象。 
+2、如果仍然没有建立 xmlHttp，则以非 Microsoft 的方式创建该对象。 
+最后，xmlHttp 应该引用一个有效的 XMLHttpRequest 对象，无论运行什么样的浏览器
+
+
+Ajax 的基本请求/响应模型
+
+发出请求,步骤：
+1、从 Web 表单中获取需要的数据。 
+2、建立要连接的 URL。 
+3、打开到服务器的连接。 
+4、设置服务器在完成后要运行的函数。 
+5、发送请求。
+
+处理响应：
+1.什么也不要做，直到 xmlHttp.readyState 属性的值等于 4 
+2.服务器将把响应填充到 xmlHttp.responseText 属性中
+
+
+请求端有 4 种方法
+1.open() 发起服务器连接。可以带参数(method:将要使用的 HTTP 方法（可以是 POST 或者 GET）
+                                url:请求的 URL
+                                async:可选布尔参数，表明请求是否异步（该参数的默认值为 Ture）
+                                user:一个可选用户名，供认证使用
+                                password:一个可选密码，供认证使用)
+
+2.setRequestHeader() 设置请求报头，带有两个参数：报头及其相关值
+3.send() 发送请求。该方法带有一个可选参数，包含 POST 请求的正文
+4.abort() 中止请求
+
+
+响应的属性和方法：
+status:请求的标准 HTTP 状态（例如，成功请求将返回 200）
+statusText:包括 Web 服务器返回的完整响应字符串，其中包括响应文本（例如，304 Not Modified）
+getResponseHeader():返回特定报头内容；请求报头名称是其惟一参数
+getAllResponseHeaders():返回所有响应报头的文本
+responseText:响应文本的字符串表示
+responseXML:响应文本的 XML 表示，一个包含 DOM 和所有相关 DOM 方法的文档片段
+
+
+补充：
+HTTP 五种就绪状态
+0：请求没有发出（在调用 open() 之前）。 
+1：请求已经建立但还没有发出（调用 send() 之前）。 
+2：请求已经发出正在处理之中（这里通常可以从响应得到内容头部）。 
+3：请求已经处理，响应中通常有部分数据可用，但是服务器还没有完成响应。 
+4：响应已完成，可以访问服务器响应并使用它。
+
+0: UNSENT。表示对象已创建
+1: OPENED。表示 open() 方法已成功调用
+2: HEADERS_RECEIVED。表示来自请求的报头已收到
+3: LOADING。表示响应报头已下载
+4: DONE。表示请求完成，但是并没有指出请求是否成功或返回预期值（查询响应和标准 HTTP 报头来估量请求的健康状况）
+
+
+/* 封装ajax函数
+ * @param {string}opt.type http连接的方式，包括POST和GET两种方式
+ * @param {string}opt.url 发送请求的url
+ * @param {boolean}opt.async 是否为异步请求，true为异步的，false为同步的
+ * @param {object}opt.data 发送的参数，格式为对象类型
+ * @param {function}opt.success ajax发送并接收成功调用的回调函数
+ */
+    function ajax(opt) {
+        opt = opt || {};
+        opt.method = opt.method.toUpperCase() || 'POST';
+        opt.url = opt.url || '';
+        opt.async = opt.async || true;
+        opt.data = opt.data || null;
+        opt.success = opt.success || function () {};
+        var xmlHttp = null;
+        if (XMLHttpRequest) {
+            xmlHttp = new XMLHttpRequest();
+        }
+        else {
+            xmlHttp = new ActiveXObject('Microsoft.XMLHTTP');
+        }var params = [];
+        for (var key in opt.data){
+            params.push(key + '=' + opt.data[key]);
+        }
+        var postData = params.join('&');
+        if (opt.method.toUpperCase() === 'POST') {
+            xmlHttp.open(opt.method, opt.url, opt.async);
+            xmlHttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=utf-8');
+            xmlHttp.send(postData);
+        }
+        else if (opt.method.toUpperCase() === 'GET') {
+            xmlHttp.open(opt.method, opt.url + '?' + postData, opt.async);
+            xmlHttp.send(null);
+        } 
+        xmlHttp.onreadystatechange = function () {
+            if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+                opt.success(xmlHttp.responseText);
+            }
+        };
+    }
+    
+    
+
+jQuery Ajax在web应用开发中很常用，它主要包括有ajax,get,post,load,getscript等等这几种常用无刷新操作方法
+1.load
+格式：load(url,[data],[callback])
+作用载入远程HTML文件代码并插入至DOM中，默认使用GET方式，传递参数时自动转换为POST方式。
+参数：
+url:要载入的远程url地址
+data:发送至服务器的key/value 数据
+callback:载入成功时的回调函数
+
+eg:
+//无参数、无回调函数
+$("#showload").load("load.htm");
+
+//无回调函数
+$("#showload").load("load.htm", { "para": "para-value" });
+
+//回调函数
+$("#showload").load("load.htm", { "para": "para-value" },
+    function() {
+        //处理
+    })
+
+
+2.jQuery.get(url, [data], [callback])
+作用：使用get方式从服务器端获取数据
+参数：
+发送请求的URL地址
+要发送给服务器的数据
+载入成功时回调函数
+eg:
+$.get("jqueryget.htm", { "id": this.id },
+    function(req) {
+        //成功时的回调方法
+        $("#showget").html(req);
+    });
+})
+
+
+3.jQuery.getScript(url,[callback])
+作用：通过 GET 方式请求载入并执行一个JavaScript文件
+
+
+4.jQuery.getJSON(url,[data],[callback])
+作用：通过get方式获取json格式的数据
+eg:
+$.getJSON("http://api.flickr.com/services/feeds/photos_public.gne?tags=cat&tagmode=any&format=json&jsoncallback=?", function(req) {
+    $.each(req.items, function(i, item) {
+        if (i == vnum) {
+            $("<img src="" + item.media.m + "" title="" + item.title + "" />").appendTo("#showjson");
+        }
+    });
+});
+
+
+
+5.jQuery的Ajax
+
+$.ajax({
+    url: "http://www.hzhuti.com",    //请求的url地址
+    dataType: "json",                //返回格式为json
+    async: true,                     //请求是否异步，默认为异步，这也是ajax重要特性
+    data: { "id": "value" },         //参数值
+    type: "GET",                     //请求方式
+    beforeSend: function() {
+                                     //请求前的处理
+    },
+    success: function(req) {
+                                     //请求成功时处理
+    },
+    complete: function() {
+                                     //请求完成的处理
+    },
+    error: function() {
+                                     //请求出错处理
+    }
+});
+    
