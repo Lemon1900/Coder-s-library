@@ -172,6 +172,114 @@ END OF INNODB MONITOR OUTPUT
 而是分别使用innodb_read_io_threads和innodb_write_io_threads参数.
 
 内存：
+InnoDB存储引擎内存由以下几个部分组成:缓冲地(buffer pool) 、重做日志缓冲地(redo log buffer) 以及额外的内存池(additional memory pool) ，
+分别由配置文件中的参数innodb_buffer_pool_size和innodb_log_buffer_size的大小决定。
+
+缓冲池是占最大块内存的部分，用来存放各种数据的缓存。因为InnoDB 的存储引擎的工作方式总是将数据库文件按页(每页16K) 读取到缓冲地，
+然后按最近最少使用(LRU)的算法来保留在缓冲地中的缓存数据。如果数据库文件需要修改，总是首先修改在缓存池中的页(发生修改后，该页即为脏页) ，
+然后再按照一定的频率将缓冲地的脏页刷新(flush) 到文件。
+可以通过命令SHOW ENGINE INNODB STATUS来查看innodb_buffer_pool的具体使用情况：
+mysql> show engine innodb status\G：
+Status :
+BUFFER POOL AND MEMORY
+Buffer pool size 65536
+Free buffers 51225
+Database pages 12986
+Modified db pages 8
+
+在BUFFER POOL AND MEMORY里可以看到InnoDB存储引擎缓冲地的使用情况，buffer pool size表明了一共有多少个缓冲帧(buffer frame) ，
+每个buffer frame为16K ，所以这里一共分配了65536*16/1024=lG 内存的缓冲池。Free buffers表示当前空闲的缓冲帧，Database pages表示已经使用的缓冲帧， 
+Modified db pages表示脏页的数量。
+
+缓冲池中缓存的数据页类型有:索引页、数据页、undo 页、插入缓冲(insert buffer) 、自适应哈希索引(adaptive hash index) 、
+InnoDB存储的锁信息(lock info) 、数据字典信息(data dictionary) 等。不能简单地认为，缓冲地只是缓存索引页和数据页，它们只是占缓冲池很大的一部分而已。
+
+日志缓冲将重做日志信息先放入这个缓冲区，然后按一定频导将其刷新到重做日志文件。该值一般不需要设置为很大，
+因为一般情况下每一秒钟就会将重做日志缓冲刷新到日志文件，因此我们只需要保证每秒产生的事务量在这个缓冲大小之内即可。
+
+额外的内存池通常被DBA忽略，认为该值并不是十分重要，但恰恰相反。在InnoDB存储引擎中，对内存的管理是通过一种称为内存堆(heap) 的方式进行的。
+在对一些数据结构本身分配内存时，需要从额外的内存池中申请，当该区域的内存不够时，会从缓冲地中申请。
+InnoDB实例会申请缓冲地(innodb_buffer_pool) 的空间，但是每个缓冲地中的帧缓冲(frame buffer) 还有对应的缓冲控制对象( buffercontrol block) ，
+而且这些对象记录了诸如LRU 、锁、等待等方面的信息，而这个对象的内存需要从额外内存池中申请。因此，当你申请了很大的InnoDB缓冲地时，这个值也应该相应增加。
+
+master thread
+InnoDB存储引擎的主要工作都是在一个单独的后台线程master thread中完成的。
+该线程的具体实现以及该线程可能存在的问题：
+master thread的线程优先级别最高。其内部由几个循环(loop) 组成:主循环(loop) 、后台循环(backgroun d loop) 、刷新循环(flush loop) 、
+暂停循环(suspend loop). master thread会根据数据库运行的状态在loop 、background loop 、flush loop和suspend loop中进行切换。
+
+loop称为主循环，因为大多数的操作都在这个循环中，其中有两大部分操作:每秒钟的操作和每10秒的操作。伪代码如下:
+void master_thread(){
+loop,
+for(int i = 0 ; i < 10; i++){
+do thing once per second
+sleep 1 second if necessary
+do things once per ten seconds
+goto
+
+可以看到，loop循环通过thread sleep来实现，这意味着所谓的每秒一次或每10秒一次的操作是不精确的。
+在负载很大的情况下可能会有延迟(delay) ，只能说大概在这个频率下。当然， I nnoDB源代码中还采用了其他的方法来尽量保证这个频率。
+
+每秒一次的操作包括:
+日志缓冲刷新到磁盘，即使这个事务还没有提交(总是)。
+合并插入缓冲(可能)。
+至多刷新100个InnoDB的缓冲池中的脏页到磁盘(可能)。
+如果当前没有用户活动，切换到background loop (可能)。
+
+即使某个事务还没有提交， InnoDB存储引擎仍然会每秒将重做日志缓冲中的内容刷新到重做日志文件。
+这一点是必须知道的，这可以很好地解释为什么再大的事务commit的时间也是很快的。
+合并插入缓冲(insert buffer) 并不是每秒都发生。InnoDB存储引擎会判断当前一秒内发生的io次数是否小于5次，
+如果小于5 次， InnoDB认为当前的io压力很小，可以执行合并插入缓冲的操作。
+
+同样，刷新100个脏页也不是每秒都在发生。
+InnoDB存储引擎通过判断当前缓冲池中脏页的比例(buf_ get _ mod ified _ ratio _ pct) 是否超过了配置文件中i nnodb_max _dirty pages_pct 这个参数(默认为90 ，代表90%) ，
+如果超过了这个阑值， InnoDB存储引擎认为需要做磁盘同步操作，将100个脏页写入磁盘。
+
+伪代码可以进一步具体化：
+void master_thread(){
+goto 100p;
+100p:
+for(int i = 0; i<10; i++){
+  thread_s1eep(1) // s1eep 1 second
+  do 10g buffer f1ush to disk
+  if (1ast_one_second_ios < 5 )
+      do merge at most 5 insert buffer
+  if ( buf_ get_modified_ ratio_pct > innodb_max_dirty_pages_pct )
+      do buffer po01 f1ush 100 dirty page
+  if ( no user activity )
+      goto backgroud 100p
+  }
+  do things once per ten seconds
+  background loop
+    do something
+    goto loop;
+    
+    
+接着来看每10秒的操作，包括如下内容:
+刷新100个脏页到磁盘(可能)。
+合并至多5个插入缓冲(总是)。
+将日志缓冲刷新到磁盘(总是)。
+删除无用的Undo页(总是)。
+刷新100个或者10个脏页到磁盘(总是)。
+产生一个检查点(总是)。
+
+在以上的过程中， lnnoDB存储引擎会先判断过去10秒之内磁盘的10操作是否小于200次。如果是， InnoDB存储引擎认为当前有足够的磁盘10操作能力，
+因此将100个脏页刷新到磁盘。接着，Inno DB存储引擎会合并插入缓冲。不同于每l 秒操作时可能发生的合井插人缓冲操作，
+这次的合并插入缓冲操作总会在这个阶段进行。之后， InnoDB存储引擎会再执行一次将日志缓冲刷新到磁盘的操作，这与每秒发生的操作是一样的。
+
+接着lnnoDB存储引擎会执行一步full purge操作，即删除无用的Undo页。对表执行update 、delete这类操作时，原先的行被标记为删除，
+但是因为一致性读(consistent read)的关系，需要保留这些行版本的信息。但是在full purge 过程中， 
+InnoDB存储引擎会判断当前事务系统中已被删除的行是否可以删除，比如有时候可能还有查询操作需要读取之前版本的Undo信息，
+如果可以， InnoDB 会立即将其删除。从源代码中可以发现， InnoDB存储引擎在操作full purge时，每次最多删除20个Undo页。
+然后， InnoDB存储引擎会判断缓冲地中脏页的比例( bu f_get_modified_ratio_pct) ，如果有超过70%的脏页，则刷新100个脏页到磁盘；
+如果脏页的比例小于70% ，则只需刷新10%的脏页到磁盘。
+
+最后， InnoDB存储引擎会产生一个检查点(checkpoint) ， lnnoDB存储引擎的检查点也称为模糊检查点(fuzzy checkpoint)》
+InnoDB存储引擎在checkpoint时并不会把所有缓冲池中的脏页都写入磁盘，因为这样可能会对性能产生影响，而只是将最老日志序列号(oldest LSN) 的页写入磁盘。
+
+
+  
+
 
 
 
