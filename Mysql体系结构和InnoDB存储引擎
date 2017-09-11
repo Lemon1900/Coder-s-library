@@ -166,8 +166,8 @@ Pending f1ushes (fsync) 10g: 0; buffer poo1: 0
 0 . 00 reads/s, 0 avg bytes/read, 0.00 writes/s , 0.00 fsyncs/s
 END OF INNODB MONITOR OUTPUT
 
-可以看到， 4个10线程分别是insert bu的r thread 、log thread 、read thread 、write thread。在Linux平台下， 10 thread的数量不能进行调整，
-但是在Windows平台下可以通过参数innodb_file_io_threads来增大10 threado InnoDB Plugin版本开始增加了默认10 thread的数量，
+可以看到， 4个10线程分别是insert buffer thread 、log thread 、read thread 、write thread。在Linux平台下， io thread 的数量不能进行调整，
+但是在Windows平台下可以通过参数innodb_file_io_threads来增大io thread. InnoDB Plugin版本开始增加了默认io thread的数量，
 默认的read thread 和write thread分别增大到了4个，并且不再使用innodb_file_io_threads参数， 
 而是分别使用innodb_read_io_threads和innodb_write_io_threads参数.
 
@@ -238,7 +238,7 @@ InnoDB存储引擎通过判断当前缓冲池中脏页的比例(buf_ get _ mod i
 伪代码可以进一步具体化：
 void master_thread(){
 goto 100p;
-100p:
+loop:
 for(int i = 0; i<10; i++){
   thread_s1eep(1) // s1eep 1 second
   do 10g buffer f1ush to disk
@@ -277,10 +277,89 @@ InnoDB存储引擎会判断当前事务系统中已被删除的行是否可以�
 最后， InnoDB存储引擎会产生一个检查点(checkpoint) ， lnnoDB存储引擎的检查点也称为模糊检查点(fuzzy checkpoint)》
 InnoDB存储引擎在checkpoint时并不会把所有缓冲池中的脏页都写入磁盘，因为这样可能会对性能产生影响，而只是将最老日志序列号(oldest LSN) 的页写入磁盘。
 
+现在，我们可以完整地把主循环(main loop) 的伪代码写出来了，内容如下:
+void master_ thread(){
+goto loop;
+loop:
+for(int i = 0; i<10; i++){
+    thread_s1eep(1) // s1eep 1 second
+    do 1og buffer f1ush to disk
+    if (last_one_ second_ios < 5 )
+        do merge at most 5 insert buffer
+    if ( buf_get_modified_ratio_pct > innodb_max_ dirty_ pages_pct )
+        do buffer po01 flush 100 dirty page
+    if ( no user activity )
+        goto backgroud 100p
+    if ( 1ast_ten_second_ios < 200 )
+        do buffer po01 f1ush 100 dirty page
+        do rnerge at rnost 5 insert buffer
+        do log buffer f1ush to disk
+      do fu11 purge
+    if ( buf_get_modified_ratio_pct > 70革}
+        do buffer poo1 f1ush 100 dirty page
+    e1se
+        buffer pool f1ush 10 dirty page
+        do fuzzy checkpoint
+    goto 100p
+    background 1oop:
+        do something
+    goto loop;
+}
 
+接着来看background loop ，若当前没有用户活动(数据库空闲时)或者数据库关闭时，就会切换到这个循环。这个循环会执行以下操作:
+删除无用的Undo页(总是)。
+合并20个插入缓冲(总是)。
+跳回到主循环(总是).
+
+不断刷新100个页，直到符合条件(可能，跳转型Jflush ]OOp中完成).如果flush loop中也没有什么事情可以做了， InnoDB存储引擎会切换到suspend_loop,
+将master thread挂起，等待事件的发生。若启用了InnoDB 存储引擎，却没有使用任何InnoDB存储引擎的表，那么master thread总是处于挂起状态。
   
 
+最后，master thread完整的伪代码如下:
+void master_thread(){
+goto 1oop;
+loop:
+for(int i = 0; i<10; i++){
+    thread_s1eep(1) // s1eep 1 second
+    do 10g buffer f1ush to disk
+    if ( 1ast_one_second_ ios < 5 )
+        do merge at most 5 insert buffer
+    if ( buf_get_modified_ratio_pct > innodb_max_dirty_pages_pct )
+        do buffer po01 f1ush 100 dirty page
+    if ( no user activity )
+        goto backgroud loop
+    if ( 1ast_ten_second_ ios < 200 )
+        do buffer pool f1ush 100 dirty page
+        do merge at most 5 insert buffer
+        do log buffer f1ush to disk
+        do full purge
+    if ( buf_get_modified_ratio_pct > 70%}
+        do buffer po01 f1ush 100 dirty page
+    e1se
+        buffer pool f1ush 10 dirty page
+        do fuzzy checkpoint
+    goto loop;
+    background loop:
+    do full purge
+    do merge 20 insert buffer
+    if not id1e:
+        goto loop:
+    e1se:
+        goto f1ush loop
+    f1ush loop:
+    do buffer pool f1ush 100 dirty page
+    if ( buf_get_modified_ratio_pct> innodb_max_dirty_pages_pct )
+        goto f1ush loop
+    goto suspend loop
+    suspend loop:
+    suspend_thread()
+    waiting event
+    goto loop;
+}
 
+
+
+master thread的潜在问题
 
 
 
