@@ -294,3 +294,208 @@ public Class PriorityQ{
 
 日常算术表达式通常是将操作符放在两个操作数中间，这种写法叫做中缀表达式；操作符跟在两个操作数后面叫做后缀表达式也叫作波兰逆序表达式RPN
 a+b---ab+
+
+
+3.链表
+链表是一种物理存储单元上非连续、非顺序的存储结构，数据元素的逻辑顺序是通过链表中的指针链接次序实现的。链表由一系列结点（链表中每一个元素称为结点）组成，
+结点可以在运行时动态生成。每个结点包括两个部分：一个是存储数据元素的数据域，另一个是存储下一个结点地址的指针域。 相比于线性表顺序结构，操作复杂。
+由于不必须按顺序存储，链表在插入的时候可以达到O(1)的复杂度，比另一种线性表顺序表快得多，但是查找一个节点或者访问特定编号的节点则需要O(n)的时间，
+而线性表和顺序表相应的时间复杂度分别是O(logn)和O(1)。
+使用链表结构可以克服数组链表需要预先知道数据大小的缺点，链表结构可以充分利用计算机内存空间，实现灵活的内存动态管理。但是链表失去了数组随机读取的优点，
+同时链表由于增加了结点的指针域，空间开销比较大。链表最明显的好处就是，常规数组排列关联项目的方式可能不同于这些数据项目在记忆体或磁盘上顺序，
+数据的存取往往要在不同的排列顺序中转换。链表允许插入和移除表上任意位置上的节点，但是不允许随机存取。链表有很多种不同的类型：单向链表，
+双向链表以及循环链表。链表可以在多种编程语言中实现。
+
+public class LinkedList<E>{
+    transient int size = 0;
+    transient Node<E> first;
+    transient Node<E> last;
+    
+    /**
+     * Constructs an empty list.
+     */
+    public LinkedList() {
+    }
+    
+    public LinkedList(Collection<? extends E> c) {
+        this();
+        addAll(c);
+    }
+    
+    /**
+     * Links e as first element.
+     */
+    private void linkFirst(E e) {
+        final Node<E> f = first;
+        final Node<E> newNode = new Node<>(null, e, f);
+        first = newNode;
+        if (f == null)
+            last = newNode;
+        else
+            f.prev = newNode;
+        size++;
+        modCount++;
+    }
+    
+    /**
+     * Links e as last element.
+     */
+    void linkLast(E e) {
+        final Node<E> l = last;
+        final Node<E> newNode = new Node<>(l, e, null);
+        last = newNode;
+        if (l == null)
+            first = newNode;
+        else
+            l.next = newNode;
+        size++;
+        modCount++;
+    }
+    
+    /**
+     * Inserts element e before non-null Node succ.
+     */
+    void linkBefore(E e, Node<E> succ) {
+        // assert succ != null;
+        final Node<E> pred = succ.prev;
+        final Node<E> newNode = new Node<>(pred, e, succ);
+        succ.prev = newNode;
+        if (pred == null)
+            first = newNode;
+        else
+            pred.next = newNode;
+        size++;
+        modCount++;
+    }
+    
+    /**
+     * Unlinks non-null first node f.
+     */
+    private E unlinkFirst(Node<E> f) {
+        // assert f == first && f != null;
+        final E element = f.item;
+        final Node<E> next = f.next;
+        f.item = null;
+        f.next = null; // help GC
+        first = next;
+        if (next == null)
+            last = null;
+        else
+            next.prev = null;
+        size--;
+        modCount++;
+        return element;
+    }
+    
+    /**
+     * Unlinks non-null first node f.
+     */
+    private E unlinkFirst(Node<E> f) {
+        // assert f == first && f != null;
+        final E element = f.item;
+        final Node<E> next = f.next;
+        f.item = null;
+        f.next = null; // help GC
+        first = next;
+        if (next == null)
+            last = null;
+        else
+            next.prev = null;
+        size--;
+        modCount++;
+        return element;
+    }
+    
+    public E getFirst() {
+        final Node<E> f = first;
+        if (f == null)
+            throw new NoSuchElementException();
+        return f.item;
+    }
+    
+     public E getLast() {
+        final Node<E> l = last;
+        if (l == null)
+            throw new NoSuchElementException();
+        return l.item;
+    }
+    public E removeFirst() {
+        final Node<E> f = first;
+        if (f == null)
+            throw new NoSuchElementException();
+        return unlinkFirst(f);
+    }
+    public E removeLast() {
+        final Node<E> l = last;
+        if (l == null)
+            throw new NoSuchElementException();
+        return unlinkLast(l);
+    }
+    
+     public boolean remove(Object o) {
+        if (o == null) {
+            for (Node<E> x = first; x != null; x = x.next) {
+                if (x.item == null) {
+                    unlink(x);
+                    return true;
+                }
+            }
+        } else {
+            for (Node<E> x = first; x != null; x = x.next) {
+                if (o.equals(x.item)) {
+                    unlink(x);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    public void clear() {
+        // Clearing all of the links between nodes is "unnecessary", but:
+        // - helps a generational GC if the discarded nodes inhabit
+        //   more than one generation
+        // - is sure to free memory even if there is a reachable Iterator
+        for (Node<E> x = first; x != null; ) {
+            Node<E> next = x.next;
+            x.item = null;
+            x.next = null;
+            x.prev = null;
+            x = next;
+        }
+        first = last = null;
+        size = 0;
+        modCount++;
+    }
+    
+    //内部类
+     private static class Node<E> {
+        E item;
+        Node<E> next;
+        Node<E> prev;
+
+        Node(Node<E> prev, E element, Node<E> next) {
+            this.item = element;
+            this.next = next;
+            this.prev = prev;
+        }
+    }
+}
+
+
+一些解释：
+插入第一个：将新的item的next元素置为原来的first元素，将新元素指定为first
+find方法：将current指向first，然后不断赋值为current.next(),依次找下去，判断节点的值是不是要找的，找到就返回这个节点，没有找到返回null
+delete方法：如果是头结点，将next置为头结点，删除头结点，如果不是头结点，将当前结点的前一个节点的next设置为当前结点的next,删除当前结点
+if(current==first){
+    first = first.next;
+}else{
+    previous.next = current.next;
+}
+
+双端链表：双端链表和链表非常相似，只有一个不一样，双端链表的last的next 是first,first的previous是last
+
+
+
+
+
