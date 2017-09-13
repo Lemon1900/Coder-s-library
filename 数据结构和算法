@@ -108,4 +108,189 @@ public  void InsertSort(int[] arr){
 
 
 二、栈和队列
+栈、队列和优先队列主要是作为程序员的工具，辅助构思算法的，而不是完全的数据存储工具。这些数据结构的生命周期通常比一般的数据库类型结构要短，在程序操作期间他们才会被创建，
+通常用他们去执行特定任务，任务完成后就被销毁。
 
+访问受限，数组可以通过下标或者迭代一一查出或者检索，但是栈和对列在特定时刻只有一个数据项可以被读取或者删除；更加抽象，他们的实现机制对用户来说是不可见的。
+
+栈：栈（stack）又名堆栈，它是一种运算受限的线性表。其限制是仅允许在表的一端进行插入和删除运算。这一端被称为栈顶，相对地，把另一端称为栈底。
+向一个栈插入新元素又称作进栈、入栈或压栈，它是把新元素放到栈顶元素的上面，使之成为新的栈顶元素；从一个栈删除元素又称作出栈或退栈，它是把栈顶元素删除掉，
+使其相邻的元素成为新的栈顶元素。
+栈可以用来在函数调用的时候存储断点，做递归时要用到栈，在计算机系统中，栈则是一个具有以上属性的动态内存区域。
+大部分微处理器运用基于栈的体系结构，当调用一个方法时，把它的返回值和参数压入栈，当方法结束返回时压入栈的数据出栈。
+
+pubic Class StackX{
+
+    private int maxSize;
+    private long[] stackArray;
+    private int top;
+    
+    //constructor
+    public StackX(int s){
+        maxSize = s;                      //set array size
+        stackArray = new long[maxSize];   //create array
+        top = -1;                         //no items yet
+    }
+    
+    //put item on top of stack
+    public void push(long j){
+        stackArray[++top] = j;            //increment top;insert item
+    }    
+    
+    //tack item from top of stack
+    public long pop(){
+        return stackArray[top--];         //access item;decrement top
+    }
+    
+    //peek top of stack
+    public long peek(){
+        return stackArray[top];
+    }
+    
+    //true if stack is empty
+    public boolean isEmpty(){
+        return top ==-1;
+    }
+    
+    //true if stack is full
+    public boolean isFull(){
+        return (top == maxSize-1);
+    }
+    
+}
+
+构造方法根据参数规定的容量创建一个新栈，栈的域包括表示最大容量的变量，数组本身以及变量top，top存储栈顶元素下标。（栈是数组实现，需要规定栈的大小，如果是链表实现，就不需要）
+
+
+对列：
+queue:队列是一种特殊的线性表，特殊之处在于它只允许在表的前端（front）进行删除操作，而在表的后端（rear）进行插入操作，
+和栈一样，队列是一种操作受限制的线性表。进行插入操作的端称为队尾，进行删除操作的端称为队头。
+
+在计算机操作系统或者网络里，有各种对列在安静的等待着工作。打印作业在打印对列中等待打印；当在键盘上敲击时，也有一个存储键入内容的对列；
+利用对列保证了键入内容在处理时顺序不会发生变化。
+
+public Class Queue{
+    private int maxSize;
+    private long[] queArray;
+    private int front;
+    private int rear;
+    private int nItems;
+    
+    //constructor
+    public Queue(int s){
+        maxSize = s;
+        queArray = new long[maxSize];
+        front = 0;
+        rear = -1;
+        nItems = 0;
+    }
+    
+    //put item at rear of queue
+    public void insert(long j){
+        if(rear == maxSize-1){     //deal with wrapround
+            rear = -1
+        }
+        queArray[++rear] = j;      //increment rear and insert item
+        nItems++;                 //one more item
+    }
+    
+    //take item from front of queue
+    public long remove(){
+        long temp = queArray[front++];  //get value and increment front
+        if(front==maxSize-1){           //deal with wrapround
+            front = 0
+        }
+        nItem--;                        //one less item
+        return temp;
+      
+     }
+     
+     //peek at front of queue
+     public long peekFront(){
+        return queArray[front];
+     }
+     
+     //true if queue is empty
+     public boolean isEmpty(){
+        return nItem==0;
+     }
+     
+     //true if queue is full
+     public boolean ifFull(){
+        return nItem == maxSize;
+     }
+     
+     //number if item in queue
+     public int size(){
+        return nItem;
+     }
+}
+
+有的对列没有nItem ,则相应的size,等各种方法的判断要复杂一点
+
+双端对列：对列的每一端都可以插入或删除数据项，insertLeft,removeLeft,insertRight,removeRight;
+如果禁止调用一端的进和出，就是一个栈；如果禁止调用一端的进和另一端的出，就是对列。
+
+优先级对列：
+优先级对列是比栈和对列更专用的数据结构，优先级对列有对头和对尾，但是数据项是按关键字的值有序，数据项插入的时候会按照顺序插入到合适的位置以确保顺序。
+优先级对列经常用作程序员的编程工具，在计算机系统中也有很多应用，在抢先式多任务操作系统中，程序排在优先级对列中，这样优先级高的程序就会先得到时间片并运行。
+优先级对列通常使用一种叫做堆的数据结构来实现，以下是一个普通的实现：
+
+规则是小的优先：
+public Class PriorityQ{
+    private int maxSize;
+    private long[] queArray;
+    private int nItems;
+    
+    //constructor
+    public PriorityQ(int s){
+        maxSize = s;
+        queArray = new long[maxSize];
+        nItems = 0;
+    }
+    
+    //insert item
+    public void insert(long item){
+        if(nItem==0){                               //if no item insert at 0
+            queArray[nItem++] = item;
+        }else{
+            for(int j=nItem-1;j>=0;j--){            //loop start at end
+                if(item>queArray[j]){
+                    queArray[j+1] = queArray[j];    //if new item larger shift upward 
+                }else{
+                    break;                          //if smaller done shifting
+                }
+            }
+            queArray[j+1] = item;                   //insert it
+            nItem++;
+        }
+    }
+    
+    //remove min item
+    public long remove(){
+        return queArray[--nItem];
+    }
+    
+    public long peekMin(){
+        return queArray[nItem-1];
+    }
+    
+     //true if queue is empty
+     public boolean isEmpty(){
+        return nItem==0;
+     }
+     
+     //true if queue is full
+     public boolean ifFull(){
+        return nItem == maxSize;
+     }
+}
+
+
+应用：解析算术表达式
+步骤：
+1.将算术表达式转换成后缀表达式
+2.计算后缀表达式的值
+
+日常算术表达式通常是将操作符放在两个操作数中间，这种写法叫做中缀表达式；操作符跟在两个操作数后面叫做后缀表达式也叫作波兰逆序表达式RPN
+a+b---ab+
