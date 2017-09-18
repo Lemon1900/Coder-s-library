@@ -13,26 +13,172 @@
 否则将会带来服务器状态的不一致以及请求分配冲突等问题。如何确保负载均衡器的唯一性是该软件成功的关键。
 
 
+将负载均衡器LoadBalancer设计为单例类，其中包含一个存储服务器信息的集合serverList，每次在serverList中随机选择一台服务器来响应客户端的请求，
+实现代码如下所示：
+import java.util.*;
+
+//负载均衡器LoadBalancer：单例类，真实环境下该类将非常复杂，包括大量初始化的工作和业务方法，考虑到代码的可读性和易理解性，只列出部分与模式相关的核心代码
+class LoadBalancer {
+	//私有静态成员变量，存储唯一实例
+	private static LoadBalancer instance = null;
+	//服务器集合
+	private List serverList = null;
+	
+	//私有构造函数
+	private LoadBalancer() {
+		serverList = new ArrayList();
+	}
+	
+	//公有静态成员方法，返回唯一实例
+	public static LoadBalancer getLoadBalancer() {
+		if (instance == null) {
+			instance = new LoadBalancer();
+		}
+		return instance;
+	}
+	
+	//增加服务器
+	public void addServer(String server) {
+		serverList.add(server);
+	}
+	
+	//删除服务器
+	public void removeServer(String server) {
+		serverList.remove(server);
+	}
+	
+	//使用Random类随机获取服务器
+	public String getServer() {
+		Random random = new Random();
+		int i = random.nextInt(serverList.size());
+		return (String)serverList.get(i);
+	}
+}
+
+客户端测试代码：
+class Client {
+	public static void main(String args[]) {
+        //创建四个LoadBalancer对象
+		LoadBalancer balancer1,balancer2,balancer3,balancer4;
+		balancer1 = LoadBalancer.getLoadBalancer();
+		balancer2 = LoadBalancer.getLoadBalancer();
+		balancer3 = LoadBalancer.getLoadBalancer();
+		balancer4 = LoadBalancer.getLoadBalancer();
+		
+		//判断服务器负载均衡器是否相同
+		if (balancer1 == balancer2 && balancer2 == balancer3 && balancer3 == balancer4) {
+			System.out.println("服务器负载均衡器具有唯一性！");
+		}
+		
+		//增加服务器
+		balancer1.addServer("Server 1");
+		balancer1.addServer("Server 2");
+		balancer1.addServer("Server 3");
+		balancer1.addServer("Server 4");
+		
+		//模拟客户端请求的分发
+		for (int i = 0; i < 10; i++) {
+            String server = balancer1.getServer();
+			System.out.println("分发请求至服务器： " + server);
+      }
+	}
+}
+
+编译并运行程序，输出结果如下：
+服务器负载均衡器具有唯一性！
+分发请求至服务器：  Server 1
+分发请求至服务器：  Server 3
+分发请求至服务器：  Server 4
+分发请求至服务器：  Server 2
+分发请求至服务器：  Server 3
+分发请求至服务器：  Server 2
+分发请求至服务器：  Server 3
+分发请求至服务器：  Server 4
+分发请求至服务器：  Server 4
+分发请求至服务器：  Server 1
+虽然创建了四个LoadBalancer对象，但是它们实际上是同一个对象，因此，通过使用单例模式可以确保LoadBalancer对象的唯一性。
+
+现在我们对负载均衡器的实现代码进行再次分析，当第一次调用getLoadBalancer()方法创建并启动负载均衡器时，instance对象为null值，
+因此系统将执行代码instance= new LoadBalancer()，在此过程中，由于要对LoadBalancer进行大量初始化工作，需要一段时间来创建LoadBalancer对象。
+而在此时，如果再一次调用getLoadBalancer()方法（通常发生在多线程环境中），由于instance尚未创建成功，仍为null值，判断条件(instance== null)为真值，
+因此代码instance= new LoadBalancer()将再次执行，导致最终创建了多个instance对象，这违背了单例模式的初衷，也导致系统运行发生错误。
+如何解决该问题？我们至少有两种解决方案，在正式介绍这两种解决方案之前，先介绍一下单例类的两种不同实现方式，饿汉式单例类和懒汉式单例类。
+
+饿汉单例模式：
+由于在定义静态变量的时候实例化单例类，因此在类加载的时候就已经创建了单例对象，代码如下所示：
+class EagerSingleton { 
+    private static final EagerSingleton instance = new EagerSingleton(); 
+    private EagerSingleton() { } 
+
+    public static EagerSingleton getInstance() {
+        return instance; 
+    }   
+}
+
+当类被加载时，静态变量instance会被初始化，此时类的私有构造函数会被调用，单例类的唯一实例将被创建。
+如果使用饿汉式单例来实现负载均衡器LoadBalancer类的设计，则不会出现创建多个单例对象的情况，可确保单例对象的唯一性。
 
 
+懒汉式单例类与线程锁定：
+懒汉式单例在第一次调用getInstance()方法时实例化，在类加载时并不自行实例化，这种技术又称为延迟加载(Lazy Load)技术，即需要的时候再加载实例，
+为了避免多个线程同时调用getInstance()方法，我们可以使用关键字synchronized，代码如下所示：
+class LazySingleton { 
+    private static LazySingleton instance = null; 
 
+    private LazySingleton() { } 
 
+    synchronized public static LazySingleton getInstance() { 
+        if (instance == null) {
+            instance = new LazySingleton(); 
+        }
+        return instance; 
+    }
+}
 
+该懒汉式单例类在getInstance()方法前面增加了关键字synchronized进行线程锁，以处理多个线程同时访问的问题。
+但是，上述代码虽然解决了线程安全问题，但是每次调用getInstance()时都需要进行线程锁定判断，在多线程高并发访问环境中，将会导致系统性能大大降低。
+如何既解决线程安全问题又不影响系统性能呢？我们继续对懒汉式单例进行改进。事实上，我们无须对整个getInstance()方法进行锁定，
+只需对其中的代码“instance = new LazySingleton();”进行锁定即可。因此getInstance()方法可以进行如下改进：
 
+public static LazySingleton getInstance() { 
+    if (instance == null) {
+        synchronized (LazySingleton.class) {
+            instance = new LazySingleton(); 
+        }
+    }
+    return instance; 
+}
 
+如果使用以上代码来实现单例，还是会存在单例对象不唯一。原因如下：
+假如在某一瞬间线程A和线程B都在调用getInstance()方法，此时instance对象为null值，均能通过instance == null的判断。
+由于实现了synchronized加锁机制，线程A进入synchronized锁定的代码中执行实例创建代码，线程B处于排队等待状态，
+必须等待线程A执行完毕后才可以进入synchronized锁定代码。但当A执行完毕时，线程B并不知道实例已经创建，将继续创建新的实例，导致产生多个单例对象，
+违背单例模式的设计思想，因此需要进行进一步改进，在synchronized中再进行一次(instance == null)判断，
+这种方式称为双重检查锁定(Double-Check Locking)。使用双重检查锁定实现的懒汉式单例类完整代码如下所示：
 
+class LazySingleton { 
+    private volatile static LazySingleton instance = null; 
 
+    private LazySingleton() { } 
 
+    public static LazySingleton getInstance() { 
+        //第一重判断
+        if (instance == null) {
+            //锁定代码块
+            synchronized (LazySingleton.class) {
+                //第二重判断
+                if (instance == null) {
+                    instance = new LazySingleton(); //创建单例实例
+                }
+            }
+        }
+        return instance; 
+    }
+}
 
-
-
-
-
-
-
-
-
-
+需要注意的是，如果使用双重检查锁定来实现懒汉式单例类，需要在静态成员变量instance之前增加修饰符volatile，
+被volatile修饰的成员变量可以确保多个线程都能够正确处理，且该代码只能在JDK 1.5及以上版本中才能正确执行。
+由于volatile关键字会屏蔽Java虚拟机所做的一些代码优化，可能会导致系统运行效率降低，因此即使使用双重检查锁定来实现单例模式也不是一种完美的实现方式。
 
 
 饿汉式单例类与懒汉式单例类比较
@@ -66,7 +212,7 @@ class Singleton {
 	
 	public static void main(String args[]) {
 	    Singleton s1, s2; 
-      s1 = Singleton.getInstance();
+      	    s1 = Singleton.getInstance();
 	    s2 = Singleton.getInstance();
 	    System.out.println(s1==s2);
 	}
