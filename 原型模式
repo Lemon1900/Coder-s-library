@@ -63,12 +63,12 @@ Prototype obj1  = new ConcretePrototype();
 Prototype obj2  = obj1.clone();
 
 一般而言，Java语言中的clone()方法满足：
-(1) 对任何对象x，都有x.clone() != x，即克隆对象与原型对象不是同一个对象；
-(2) 对任何对象x，都有x.clone().getClass() == x.getClass()，即克隆对象与原型对象的类型一样；
-(3) 如果对象x的equals()方法定义恰当，那么x.clone().equals(x)应该成立。
+(1)对任何对象x，都有x.clone() != x，即克隆对象与原型对象不是同一个对象；
+(2)对任何对象x，都有x.clone().getClass() == x.getClass()，即克隆对象与原型对象的类型一样；
+(3)如果对象x的equals()方法定义恰当，那么x.clone().equals(x)应该成立。
 为了获取对象的一份拷贝，我们可以直接利用Object类的clone()方法，具体步骤如下：
-(1) 在派生类中覆盖基类的clone()方法，并声明为public；
-(2) 在派生类的clone()方法中，调用super.clone()；
+(1)在派生类中覆盖基类的clone()方法，并声明为public；
+(2)在派生类的clone()方法中，调用super.clone()；
 (3)派生类需实现Cloneable接口。
 此时，Object类相当于抽象原型类，所有实现了Cloneable接口的类相当于具体原型类。
 
@@ -86,6 +86,7 @@ Prototype obj2  = obj1.clone();
 序列化就是将对象写到流的过程，写到流中的对象是原有对象的一个拷贝，而原对象仍然存在于内存中。通过序列化实现的拷贝不仅可以复制对象本身，
 而且可以复制其引用的成员对象，因此通过序列化将对象写到一个流中，再从流里将其读出来，可以实现深克隆。
 需要注意的是能够实现序列化的对象其类必须实现Serializable接口，否则无法实现序列化操作。
+这样做的前提是对象以及对象内部所有引用到的对象都是可串行化的，否则，就需要仔细考察那些不可串行化的对象可否设成transient，从而将之排除在复制过程之外。
 
 Java语言提供的Cloneable接口和Serializable接口的代码非常简单，它们都是空接口，这种空接口也称为标识接口，标识接口中没有任何方法的定义，
 其作用是告诉JRE这些接口的实现类是否具有某个功能，如是否支持克隆、是否支持序列化等。
@@ -103,6 +104,14 @@ public WeeklyLog deepClone() throws  IOException, ClassNotFoundException, Option
       return  (WeeklyLog)ois.readObject();
 }
 
+
+深克隆还有一个方法，就是用json
+public Swallow deepClone2(){
+        Gson gson = new Gson();
+        String json = gson.toJson(this);
+        return gson.fromJson(json, this.getClass());
+}
+效率是会低一些
 
 
 原型模式总结
