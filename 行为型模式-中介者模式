@@ -59,6 +59,218 @@ class ConcreteColleague extends Colleague {
 在具体同事类ConcreteColleague中实现了在抽象同事类中声明的方法，其中方法method1()是同事类的自身方法(Self-Method)，用于处理自己的行为，
 而方法method2()是依赖方法(Depend-Method)，用于调用在中介者中定义的方法，依赖中介者来完成相应的行为，例如调用另一个同事类的相关方法。
 
+eg:
+软件公司欲开发一套CRM系统，其中包含一个客户信息管理模块,有一个客户管理窗口，包括客户列表(List)，客户选择组合框(ComboBox)，文本框类(TextBox)等
+每一个界面组件都与多个其他组件之间产生相互关联和调用，每一个组件和其他组件之间都具有很强的关联，
+使用中介者模式，
+Component充当抽象同事类，Button、List、ComboBox和TextBox充当具体同事类，Mediator充当抽象中介者类，ConcreteMediator充当具体中介者类，
+ConcreteMediator维持了对具体同事类的引用，为了简化ConcreteMediator类的代码，我们在其中只定义了一个Button对象和一个TextBox对象。
+完整代码如下所示：
+//抽象中介者
+abstract class Mediator {
+	public abstract void componentChanged(Component c);
+}
+
+//具体中介者
+class ConcreteMediator extends Mediator {
+	//维持对各个同事对象的引用
+	public Button addButton;
+	public List list;
+	public TextBox userNameTextBox;
+	public ComboBox cb;
+
+    //封装同事对象之间的交互
+	public void componentChanged(Component c) {
+		//单击按钮
+if(c == addButton) {
+			System.out.println("--单击增加按钮--");
+			list.update();
+			cb.update();
+			userNameTextBox.update();
+		}
+        //从列表框选择客户
+		else if(c == list) {
+			System.out.println("--从列表框选择客户--");
+			cb.select();
+			userNameTextBox.setText();
+		}
+        //从组合框选择客户
+		else if(c == cb) {
+			System.out.println("--从组合框选择客户--");
+			cb.select();
+			userNameTextBox.setText();
+		}
+	}
+}
+
+//抽象组件类：抽象同事类
+abstract class Component {
+	protected Mediator mediator;
+	
+	public void setMediator(Mediator mediator) {
+		this.mediator = mediator;
+	}
+
+	//转发调用
+	public void changed() {
+		mediator.componentChanged(this);
+	}
+	
+	public abstract void update();	
+}
+
+//按钮类：具体同事类
+class Button extends Component {
+	public void update() {
+		//按钮不产生交互
+	}
+}
+
+//列表框类：具体同事类
+class List extends Component {
+	public void update() {
+		System.out.println("列表框增加一项：张无忌。");
+	}
+	
+	public void select() {
+		System.out.println("列表框选中项：小龙女。");
+	}
+}
+
+//组合框类：具体同事类
+class ComboBox extends Component {
+	public void update() {
+		System.out.println("组合框增加一项：张无忌。");
+	}
+	
+	public void select() {
+		System.out.println("组合框选中项：小龙女。");
+	}
+}
+
+//文本框类：具体同事类
+class TextBox extends Component {
+	public void update() {
+		System.out.println("客户信息增加成功后文本框清空。");
+	}
+	
+	public void setText() {
+		System.out.println("文本框显示：小龙女。");
+	}
+}
+
+客户端测试代码：
+class Client {
+	public static void main(String args[]) {
+        //定义中介者对象
+		ConcreteMediator mediator;
+		mediator = new ConcreteMediator();
+		
+        //定义同事对象
+		Button addBT = new Button();
+		List list = new List();
+	    ComboBox cb = new ComboBox();
+	    TextBox userNameTB = new TextBox();
+
+		addBT.setMediator(mediator);
+		list.setMediator(mediator);
+		cb.setMediator(mediator);
+		userNameTB.setMediator(mediator);
+
+		mediator.addButton = addBT;
+		mediator.list = list;
+		mediator.cb = cb;
+		mediator.userNameTextBox = userNameTB;
+		
+		addBT.changed();
+		System.out.println("-----------------------------");
+		list.changed();
+	}
+}
+
+修改意见：要求在窗口的下端能够及时显示当前系统中客户信息的总数---增加一个文本标签(Label)来显示客户信息总数
+当用户点击“增加”按钮或者“删除”按钮时，将改变文本标签的内容。
+
+【解决方案一】增加一个界面组件类Label，修改原有的具体中介者类ConcreteMediator，增加一个对Label对象的引用，
+然后修改componentChanged()方法中其他相关组件对象的业务处理代码，原有组件类无须任何修改，客户端代码也需针对新增组件Label进行适当修改。
+
+【解决方案二】与方案一相同，首先增加一个Label类，但不修改原有具体中介者类ConcreteMediator的代码，
+而是增加一个ConcreteMediator的子类SubConcreteMediator来实现对Label对象的引用，然后在新增的中介者类SubConcreteMediator中通过
+覆盖componentChanged()方法来实现所有组件（包括新增Label组件）之间的交互，同样，原有组件类无须做任何修改，客户端代码需少许修改。
+由于【解决方案二】无须修改ConcreteMediator类，更符合“开闭原则”，因此我们选择该解决方案来对新增Label类进行处理
+ 
+//文本标签类：具体同事类
+class Label extends Component {
+	public void update() {
+		System.out.println("文本标签内容改变，客户信息总数加1。");
+	}
+}
+
+//新增具体中介者类
+class SubConcreteMediator extends ConcreteMediator {
+	//增加对Label对象的引用
+	public Label label;
+	
+	public void componentChanged(Component c) {
+	    //单击按钮
+if(c == addButton) {
+			System.out.println("--单击增加按钮--");
+			list.update();
+			cb.update();
+			userNameTextBox.update();
+			label.update(); //文本标签更新
+		}
+        //从列表框选择客户
+		else if(c == list) {
+			System.out.println("--从列表框选择客户--");
+			cb.select();
+			userNameTextBox.setText();
+		}
+        //从组合框选择客户
+		else if(c == cb) {
+			System.out.println("--从组合框选择客户--");
+			cb.select();
+			userNameTextBox.setText();
+		}
+	}
+}
+
+修改客户端测试代码：
+class Client {
+	public static void main(String args[]) {
+        //用新增具体中介者定义中介者对象
+		SubConcreteMediator mediator;
+		mediator = new SubConcreteMediator();
+		
+		Button addBT = new Button();
+		List list = new List();
+	    ComboBox cb = new ComboBox();
+	    TextBox userNameTB = new TextBox();
+	    Label label = new Label();
+
+		addBT.setMediator(mediator);
+		list.setMediator(mediator);
+		cb.setMediator(mediator);
+		userNameTB.setMediator(mediator);
+		label.setMediator(mediator);
+		
+		mediator.addButton = addBT;
+		mediator.list = list;
+		mediator.cb = cb;
+		mediator.userNameTextBox = userNameTB;
+		mediator.label = label;
+			
+		addBT.changed();
+		System.out.println("-----------------------------");
+		list.changed();
+	}
+}
+
+由于在本实例中不同的组件类（即不同的同事类）所拥有的方法并不完全相同，因此中介者类没有针对抽象同事类编程，
+导致在具体中介者类中需要维持对具体同事类的引用，客户端代码无法完全透明地对待所有同事类和中介者类。在某些情况下，如果设计得当，
+可以在客户端透明地对同事类和中介者类编程，这样系统将具有更好的灵活性和可扩展性。
+
+
 中介者模式总结
 中介者模式将一个网状的系统结构变成一个以中介者对象为中心的星形结构，在这个星型结构中，使用中介者对象与其他对象的一对多关系来取代原有对象之间的多对多关系。
 中介者模式在事件驱动类软件中应用较为广泛，特别是基于GUI（Graphical User Interface，图形用户界面）的应用软件，此外，
